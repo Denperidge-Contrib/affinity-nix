@@ -5,6 +5,7 @@
   lndir,
   zstd,
   lib,
+  pkgs,
 
   inputs,
   v3 ? true,
@@ -26,7 +27,19 @@ let
     hash = "sha256-xHJFtVDD/ZHVHF2Fn7TEEX0fMUWJvujNyNt2Xyw9F7o=";
   };
 
-  inherit (wine-packages) wine wineserver;
+  wintypes = pkgs.fetchurl {
+    name = "wintypes.dll";
+    url = "https://raw.githubusercontent.com/ElementalWarrior/wine-wintypes.dll-for-affinity/refs/heads/master/wintypes_shim.dll.so";
+    hash = "sha256-pcrlA48/FHpuHolzoa8JfaOP4ohp6/HalCQ9ZL/rv/Y=";
+  };
+
+  winmd = pkgs.fetchurl {
+    name = "Windows.winmd";
+    url = "https://github.com/microsoft/windows-rs/raw/master/crates/libs/bindgen/default/Windows.winmd";
+    hash = "sha256-lOtKvda8jv+oup5I9WFWurdJs0AuLl98PRiytasPxys=";
+  };
+
+  inherit (wine-packages) wine wineserver winetricks;
 in
 runCommand "base-prefix-4" { } ''
   set -x -e
@@ -53,6 +66,12 @@ runCommand "base-prefix-4" { } ''
     ${lib.getExe lndir} ${installers.photo} "$WINEPREFIX/drive_c/Program Files/"
     ${lib.getExe lndir} ${installers.designer} "$WINEPREFIX/drive_c/Program Files/"
     ${lib.getExe lndir} ${installers.publisher} "$WINEPREFIX/drive_c/Program Files/"
+    cp "${wintypes}" "$WINEPREFIX/drive_c/Program Files/Affinity/wintypes.dll"
+    cp "${wintypes}" "$WINEPREFIX/drive_c/Program Files/Affinity/Photo 2/wintypes.dll"
+    cp "${wintypes}" "$WINEPREFIX/drive_c/Program Files/Affinity/Publisher 2/wintypes.dll"
+    cp "${wintypes}" "$WINEPREFIX/drive_c/Program Files/Affinity/Designer 2/wintypes.dll"
+    cp ${winmd} "$WINEPREFIX/drive_c/windows/system32/winmetadata/Windows.winmd"
+    echo ${lib.getExe winetricks} --unattended allfonts
   ''}
 
   ${lib.getExe wineserver} -w

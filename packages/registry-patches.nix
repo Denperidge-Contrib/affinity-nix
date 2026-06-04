@@ -10,6 +10,7 @@ rec {
       [HKEY_CURRENT_USER\Software\Wine\DllOverrides]
       "d3d12"="native"
       "d3d12core"="native"
+      "wintypes"="native"
     '').outPath;
 
   combined = pkgs.linkFarm "registry-patches-combined" [
